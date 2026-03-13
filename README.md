@@ -34,10 +34,10 @@ pip install -r requirements.txt
 
 2. **Create .env file:**
 ```env
-DISCORD_TOKEN=your_bot_token_here
-ANNOUNCEMENTS_CHANNEL=channel_id
-GENERAL_CHANNEL=channel_id
-PROMOS_CHANNEL=channel_id
+DISCORD TOKEN=your_bot_token_here
+ANNOUNCEMENTS CHANNEL=channel_id
+GENERAL CHANNEL=channel_id
+PROMOS CHANNEL=channel_id
 ```
 
 3. **Get Discord Bot Token:**

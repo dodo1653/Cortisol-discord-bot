@@ -13,9 +13,9 @@ intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
 CHANNEL_IDS = {
-    'announcements': int(os.getenv('ANNOUNCEMENTS_CHANNEL', '0')),
-    'general': int(os.getenv('GENERAL_CHANNEL', '0')),
-    'promos': int(os.getenv('PROMOS_CHANNEL', '0')),
+    'announcements': int(os.getenv('ANNOUNCEMENTS CHANNEL', '0')),
+    'general': int(os.getenv('GENERAL CHANNEL', '0')),
+    'promos': int(os.getenv('PROMOS CHANNEL', '0')),
 }
 
 TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
@@ -149,4 +149,4 @@ async def clear(ctx, amount: int):
     await ctx.channel.purge(limit=amount + 1)
     await ctx.send(f"Cleared {amount} messages!", delete_after=3)
 
-bot.run(os.getenv('DISCORD_TOKEN'))
+bot.run(os.getenv('DISCORD TOKEN'))

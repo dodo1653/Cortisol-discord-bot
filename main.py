@@ -1,10 +1,7 @@
 import os
-import asyncio
-import aiohttp
 import discord
 from discord import Intents, Embed, Color
-from discord.ext import commands, tasks
-from datetime import datetime
+from discord.ext import commands
 
 intents = Intents.default()
 intents.message_content = True
@@ -12,94 +9,127 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
-CHANNEL_IDS = {
-    'announcements': int(os.getenv('ANNOUNCEMENTS_CHANNEL', '0')),
-    'general': int(os.getenv('GENERAL_CHANNEL', '0')),
-    'promos': int(os.getenv('PROMOS_CHANNEL', '0')),
-}
-
-TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
-
-auto_post_content = [
-    "🌊 Stay chill. Don't spike. $CORTISOL",
-    "💧 Keep your cortisol levels low. Hold $CORTISOL.",
-    "🔒 Low stress, high gains. $CORTISOL",
-    "🧘‍♂️ Stay calm. Stay hydrated. Hold $CORTISOL.",
-    "📉 When cortisol spikes, $CORTISOL delivers.",
-    "🚀 Built on Solana. Made for the culture.",
-    "🎯 Fair launch. No presale. 100% community.",
-    "💎 Don't panic. Keep holding $CORTISOL.",
-]
-
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
-    auto_post.start()
-    price_alert.start()
-    status_task.start()
+    await bot.change_presence(activity=discord.Game("lowcortisol.site"))
 
-@bot.event
-async def on_member_join(member):
-    welcome_channel = bot.get_channel(CHANNEL_IDS.get('general', 0))
-    if welcome_channel:
-        embed = Embed(
-            title="Welcome to $CORTISOL! 🌊",
-            description=f"Hey {member.mention}! Welcome to the chill zone. Stay calm and hold!",
-            color=Color.teal()
-        )
-        embed.add_field(name="Links", value="[Website](https://lowcortisol.site) | [Pump.fun](https://pump.fun) | [Twitter](https://x.com/Cortisol_solana)")
-        await welcome_channel.send(embed=embed)
-        
-        try:
-            role = discord.utils.get(member.guild.roles, name="Holder")
-            if role:
-                await member.add_roles(role)
-        except:
-            pass
+# ===== MODERATION =====
 
-@tasks.loop(hours=1)
-async def auto_post():
-    channel = bot.get_channel(CHANNEL_IDS.get('promos', 0))
-    if channel:
-        import random
-        content = random.choice(auto_post_content)
-        embed = Embed(color=Color.teal())
-        embed.description = f"📢 **{content}**\n\n[🌐 Website](https://lowcortisol.site)"
-        await channel.send(embed=embed)
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def clear(ctx, amount: int):
+    """Clear messages"""
+    await ctx.channel.purge(limit=amount + 1)
+    await ctx.send(f"✅ Cleared {amount} messages", delete_after=3)
 
-@tasks.loop(minutes=15)
-async def price_alert():
+@bot.command()
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, member: discord.Member, *, reason=None):
+    """Kick a member"""
+    await member.kick(reason=reason)
+    await ctx.send(f"✅ Kicked {member.mention}")
+
+@bot.command()
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, member: discord.Member, *, reason=None):
+    """Ban a member"""
+    await member.ban(reason=reason)
+    await ctx.send(f"✅ Banned {member.mention}")
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def mute(ctx, member: discord.Member):
+    """Mute a member"""
+    muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
+    if not muted_role:
+        muted_role = await ctx.guild.create_role(name="Muted")
+        for channel in ctx.guild.channels:
+            await channel.set_permissions(muted_role, send_messages=False)
+    await member.add_roles(muted_role)
+    await ctx.send(f"✅ Muted {member.mention}")
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def unmute(ctx, member: discord.Member):
+    """Unmute a member"""
+    muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
+    if muted_role:
+        await member.remove_roles(muted_role)
+        await ctx.send(f"✅ Unmuted {member.mention}")
+
+# ===== ANNOUNCEMENTS =====
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def announce(ctx, *, message):
+    """Post an announcement embed"""
+    embed = Embed(
+        title="📢 Announcement",
+        description=message,
+        color=Color.teal(),
+        timestamp=discord.utils.utcnow()
+    )
+    embed.set_footer(text="$CORTISOL")
+    await ctx.send(embed=embed)
+    await ctx.message.delete()
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def promo(ctx, *, message):
+    """Post a promotional embed"""
+    embed = Embed(
+        description=f"**{message}**",
+        color=Color.teal(),
+        timestamp=discord.utils.utcnow()
+    )
+    embed.add_field(name="🌐 Links", value="[Website](https://lowcortisol.site) | [Twitter](https://x.com/Cortisol_solana) | [Discord](https://discord.gg/3x3hjzMXUy)")
+    embed.set_footer(text="$CORTISOL")
+    await ctx.send(embed=embed)
+    await ctx.message.delete()
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def priceembed(ctx):
+    """Post current price embed"""
+    import aiohttp
+    TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
+    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(f'https://api.dexscreener.com/latest/dex/tokens/{TOKEN_ADDRESS}') as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    if data.get('pairs'):
-                        pair = data['pairs'][0]
-                        price = pair.get('priceUsd', '0')
-                        change = pair.get('priceChange', {}).get('h24', 0)
-                        volume = pair.get('volume', {}).get('h24', 0)
-                        
-                        channel = bot.get_channel(CHANNEL_IDS.get('general', 0))
-                        if channel:
-                            embed = Embed(
-                                title="$CORTISOL Price Update",
-                                color=Color.green() if change >= 0 else Color.red()
-                            )
-                            embed.add_field(name="Price", value=f"${price}")
-                            embed.add_field(name="24h Change", value=f"{change:+.2f}%")
-                            embed.add_field(name="24h Volume", value=f"${volume:,.0f}")
-                            embed.set_footer(text="Data from DexScreener")
-                            await channel.send(embed=embed)
+                data = await resp.json()
+                if data.get('pairs'):
+                    pair = data['pairs'][0]
+                    price = pair.get('priceUsd', 'N/A')
+                    change = pair.get('priceChange', {}).get('h24', 0)
+                    volume = pair.get('volume', {}).get('h24', 0)
+                    market_cap = pair.get('marketCap', 0)
+                    
+                    embed = Embed(
+                        title="$CORTISOL Price Update",
+                        color=Color.green() if change >= 0 else Color.red(),
+                        timestamp=discord.utils.utcnow()
+                    )
+                    embed.add_field(name="💰 Price", value=f"${price}")
+                    embed.add_field(name="📈 24h Change", value=f"{change:+.2f}%")
+                    embed.add_field(name="📊 Market Cap", value=f"${market_cap:,.0f}")
+                    embed.add_field(name="🔥 Volume 24h", value=f"${volume:,.0f}")
+                    embed.add_field(name="🔗 Links", value="[Buy](https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump) | [DexScreener](https://dexscreener.com/solana/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump)")
+                    embed.set_footer(text="Data from DexScreener")
+                    await ctx.send(embed=embed)
+                    await ctx.message.delete()
     except Exception as e:
-        print(f"Price alert error: {e}")
+        await ctx.send(f"Error fetching price: {e}")
 
-@tasks.loop(minutes=5)
-async def status_task():
-    await bot.change_presence(activity=discord.Game("lowcortisol.site"))
+# ===== INFO COMMANDS =====
 
 @bot.command()
 async def price(ctx):
+    """Get current price"""
+    import aiohttp
+    TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
+    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(f'https://api.dexscreener.com/latest/dex/tokens/{TOKEN_ADDRESS}') as resp:
@@ -110,22 +140,13 @@ async def price(ctx):
                     embed.add_field(name="Price", value=f"${pair.get('priceUsd', 'N/A')}")
                     embed.add_field(name="24h Change", value=f"{pair.get('priceChange', {}).get('h24', 0):+.2f}%")
                     embed.add_field(name="Market Cap", value=f"${pair.get('marketCap', 0):,.0f}")
-                    embed.add_field(name="Liquidity", value=f"${pair.get('liquidity', {}).get('usd', 0):,.0f}")
-                    embed.add_field(name="Volume 24h", value=f"${pair.get('volume', {}).get('h24', 0):,.0f}")
-                    embed.add_field(name="Pairs", value=f"[DexScreener](https://dexscreener.com/solana/{pair.get('pairAddress', '')})")
                     await ctx.send(embed=embed)
-    except Exception as e:
-        await ctx.send(f"Error fetching price: {e}")
-
-@bot.command()
-async def buy(ctx):
-    embed = Embed(title="Buy $CORTISOL", color=Color.teal())
-    embed.add_field(name="Pump.fun", value="[Buy Now](https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump)")
-    embed.add_field(name="Website", value="[lowcortisol.site](https://lowcortisol.site)")
-    await ctx.send(embed=embed)
+    except:
+        await ctx.send("Could not fetch price")
 
 @bot.command()
 async def links(ctx):
+    """Get all links"""
     embed = Embed(title="$CORTISOL Links", color=Color.teal())
     embed.add_field(name="🌐 Website", value="https://lowcortisol.site")
     embed.add_field(name="🐦 Twitter", value="https://x.com/Cortisol_solana")
@@ -135,18 +156,20 @@ async def links(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def help(ctx):
-    embed = Embed(title="$CORTISOL Bot Commands", color=Color.teal())
-    embed.add_field(name="!price", value="Get current price & stats")
-    embed.add_field(name="!buy", value="Get buy links")
-    embed.add_field(name="!links", value="Get all social links")
-    embed.add_field(name="!help", value="Show this help message")
+async def buy(ctx):
+    """Get buy links"""
+    embed = Embed(title="Buy $CORTISOL", color=Color.teal())
+    embed.add_field(name="Pump.fun", value="[Buy Now](https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump)")
+    embed.add_field(name="Website", value="[lowcortisol.site](https://lowcortisol.site)")
     await ctx.send(embed=embed)
 
 @bot.command()
-@commands.has_permissions(manage_messages=True)
-async def clear(ctx, amount: int):
-    await ctx.channel.purge(limit=amount + 1)
-    await ctx.send(f"Cleared {amount} messages!", delete_after=3)
+async def helpme(ctx):
+    """Show help menu"""
+    embed = Embed(title="$CORTISOL Bot Commands", color=Color.teal())
+    embed.add_field(name="📊 Info", value="`!price` - Get price\n`!links` - All links\n`!buy` - Buy links")
+    embed.add_field(name="🎛️ Moderation", value="`!clear [amount]` - Clear messages\n`!kick @user` - Kick\n`!ban @user` - Ban\n`!mute @user` - Mute\n`!unmute @user` - Unmute")
+    embed.add_field(name="📢 Announcements", value="`!announce [msg]` - Announcement\n`!promo [msg]` - Promo\n`!priceembed` - Price update")
+    await ctx.send(embed=embed)
 
-bot.run(os.getenv('DISCORD TOKEN'))
+bot.run(os.getenv('DISCORD_TOKEN'))

@@ -1,4 +1,5 @@
 import os
+import aiohttp
 import discord
 from discord import Intents, Embed, Color
 from discord.ext import commands
@@ -9,10 +10,38 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
+TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
+
+async def fetch_price():
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f'https://api.dexscreener.com/latest/dex/tokens/{TOKEN_ADDRESS}') as resp:
+                data = await resp.json()
+                if data.get('pairs'):
+                    pair = data['pairs'][0]
+                    return {
+                        'price': pair.get('priceUsd', 'N/A'),
+                        'change': pair.get('priceChange', {}).get('h24', 0),
+                        'volume': pair.get('volume', {}).get('h24', 0),
+                        'market_cap': pair.get('marketCap', 0)
+                    }
+    except:
+        pass
+    return None
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
-    await bot.change_presence(activity=discord.Game("lowcortisol.site"))
+    price_data = await fetch_price()
+    if price_data:
+        mc = price_data['market_cap']
+        if mc >= 1000000:
+            mc_str = f"${mc/1000000:.1f}M"
+        else:
+            mc_str = f"${mc:,.0f}"
+        await bot.change_presence(activity=discord.Game(f"MC: {mc_str} | lowcortisol.site"))
+    else:
+        await bot.change_presence(activity=discord.Game("lowcortisol.site"))
 
 # ===== MODERATION =====
 
@@ -67,8 +96,7 @@ async def announce(ctx, *, message):
     embed = Embed(
         title="📢 Announcement",
         description=message,
-        color=Color.teal(),
-        timestamp=discord.utils.utcnow()
+        color=Color.teal()
     )
     embed.set_footer(text="$CORTISOL")
     await ctx.send(embed=embed)
@@ -80,8 +108,7 @@ async def promo(ctx, *, message):
     """Post a promotional embed"""
     embed = Embed(
         description=f"**{message}**",
-        color=Color.teal(),
-        timestamp=discord.utils.utcnow()
+        color=Color.teal()
     )
     embed.add_field(name="🌐 Links", value="[Website](https://lowcortisol.site) | [Twitter](https://x.com/Cortisol_solana) | [Discord](https://discord.gg/3x3hjzMXUy)")
     embed.set_footer(text="$CORTISOL")
@@ -92,57 +119,38 @@ async def promo(ctx, *, message):
 @commands.has_permissions(manage_messages=True)
 async def priceembed(ctx):
     """Post current price embed"""
-    import aiohttp
-    TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
+    price_data = await fetch_price()
     
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f'https://api.dexscreener.com/latest/dex/tokens/{TOKEN_ADDRESS}') as resp:
-                data = await resp.json()
-                if data.get('pairs'):
-                    pair = data['pairs'][0]
-                    price = pair.get('priceUsd', 'N/A')
-                    change = pair.get('priceChange', {}).get('h24', 0)
-                    volume = pair.get('volume', {}).get('h24', 0)
-                    market_cap = pair.get('marketCap', 0)
-                    
-                    embed = Embed(
-                        title="$CORTISOL Price Update",
-                        color=Color.green() if change >= 0 else Color.red(),
-                        timestamp=discord.utils.utcnow()
-                    )
-                    embed.add_field(name="💰 Price", value=f"${price}")
-                    embed.add_field(name="📈 24h Change", value=f"{change:+.2f}%")
-                    embed.add_field(name="📊 Market Cap", value=f"${market_cap:,.0f}")
-                    embed.add_field(name="🔥 Volume 24h", value=f"${volume:,.0f}")
-                    embed.add_field(name="🔗 Links", value="[Buy](https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump) | [DexScreener](https://dexscreener.com/solana/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump)")
-                    embed.set_footer(text="Data from DexScreener")
-                    await ctx.send(embed=embed)
-                    await ctx.message.delete()
-    except Exception as e:
-        await ctx.send(f"Error fetching price: {e}")
+    if price_data:
+        embed = Embed(
+            title="$CORTISOL Price Update",
+            color=Color.green() if price_data['change'] >= 0 else Color.red()
+        )
+        embed.add_field(name="💰 Price", value=f"${price_data['price']}")
+        embed.add_field(name="📈 24h Change", value=f"{price_data['change']:+.2f}%")
+        embed.add_field(name="📊 Market Cap", value=f"${price_data['market_cap']:,.0f}")
+        embed.add_field(name="🔥 Volume 24h", value=f"${price_data['volume']:,.0f}")
+        embed.add_field(name="🔗 Links", value="[Buy](https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump) | [DexScreener](https://dexscreener.com/solana/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump)")
+        embed.set_footer(text="Data from DexScreener")
+        await ctx.send(embed=embed)
+        await ctx.message.delete()
+    else:
+        await ctx.send("❌ Could not fetch price data")
 
 # ===== INFO COMMANDS =====
 
 @bot.command()
 async def price(ctx):
     """Get current price"""
-    import aiohttp
-    TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
-    
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f'https://api.dexscreener.com/latest/dex/tokens/{TOKEN_ADDRESS}') as resp:
-                data = await resp.json()
-                if data.get('pairs'):
-                    pair = data['pairs'][0]
-                    embed = Embed(title="$CORTISOL Stats", color=Color.teal())
-                    embed.add_field(name="Price", value=f"${pair.get('priceUsd', 'N/A')}")
-                    embed.add_field(name="24h Change", value=f"{pair.get('priceChange', {}).get('h24', 0):+.2f}%")
-                    embed.add_field(name="Market Cap", value=f"${pair.get('marketCap', 0):,.0f}")
-                    await ctx.send(embed=embed)
-    except:
-        await ctx.send("Could not fetch price")
+    price_data = await fetch_price()
+    if price_data:
+        embed = Embed(title="$CORTISOL Stats", color=Color.teal())
+        embed.add_field(name="Price", value=f"${price_data['price']}")
+        embed.add_field(name="24h Change", value=f"{price_data['change']:+.2f}%")
+        embed.add_field(name="Market Cap", value=f"${price_data['market_cap']:,.0f}")
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("❌ Could not fetch price")
 
 @bot.command()
 async def links(ctx):
@@ -171,5 +179,15 @@ async def helpme(ctx):
     embed.add_field(name="🎛️ Moderation", value="`!clear [amount]` - Clear messages\n`!kick @user` - Kick\n`!ban @user` - Ban\n`!mute @user` - Mute\n`!unmute @user` - Unmute")
     embed.add_field(name="📢 Announcements", value="`!announce [msg]` - Announcement\n`!promo [msg]` - Promo\n`!priceembed` - Price update")
     await ctx.send(embed=embed)
+
+# Error handling
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ You don't have permission to use this command")
+    elif isinstance(error, commands.CommandNotFound):
+        pass  # Ignore unknown commands
+    else:
+        await ctx.send(f"❌ Error: {str(error)}")
 
 bot.run(os.getenv('DISCORD_TOKEN'))

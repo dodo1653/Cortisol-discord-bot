@@ -32,13 +32,11 @@ Use `bot-icon.png` as the bot's profile picture:
 pip install -r requirements.txt
 ```
 
-2. **Create .env file:**
-```env
-DISCORD TOKEN=your_bot_token_here
-ANNOUNCEMENTS CHANNEL=channel_id
-GENERAL CHANNEL=channel_id
-PROMOS CHANNEL=channel_id
-```
+2. **Environment Variables:**
+   - DISCORD_TOKEN
+   - ANNOUNCEMENTS_CHANNEL
+   - GENERAL_CHANNEL
+   - PROM OS_CHANNEL
 
 3. **Get Discord Bot Token:**
    - Go to https://discord.com/developers/applications

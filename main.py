@@ -67,12 +67,12 @@ async def on_message(message):
             color=0x00d4ff,
             description="Lower your cortisol, raise the gains 🧊"
         )
-        embed.add_field(name="!price", value="Check token price", inline=True)
-        embed.add_field(name="!chart", value="View DexScreener chart", inline=True)
-        embed.add_field(name="!buy", value="Buy $CORTISOL", inline=True)
-        embed.add_field(name="!website", value="Visit lowcortisol.site", inline=True)
-        embed.add_field(name="!who", value="What is $CORTISOL?", inline=True)
-        embed.set_footer(text="$CORTISOL - chill vibes only 🥒")
+        embed.add_field(
+            name="Commands",
+            value="• `!price` — Check token price\n• `!chart` — View DexScreener chart\n• `!buy` — Buy $CORTISOL\n• `!website` — Visit lowcortisol.site\n• `!who` — What is $CORTISOL?",
+            inline=False
+        )
+        embed.set_footer(text="Made by @dazzox • $CORTISOL - chill vibes only 🥒")
         await message.channel.send(embed=embed)
 
 token = os.environ.get('DISCORD_TOKEN') or os.environ.get('BOT_TOKEN')

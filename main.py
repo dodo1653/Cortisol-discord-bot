@@ -52,7 +52,14 @@ async def on_message(message):
         await message.channel.send("🌐 lowcortisol.site")
     
     elif content == '!who' or content == '/who':
-        await message.channel.send("$CORTISOL - lower your cortisol, raise the gains 🧊")
+        embed = nextcord.Embed(
+            title="$CORTISOL",
+            description="Lower your cortisol, raise the gains 🧊",
+            color=0x00d4ff
+        )
+        embed.add_field(name="Contract Address", value="`9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump`", inline=False)
+        embed.set_footer(text="Solana")
+        await message.channel.send(embed=embed)
     
     elif content == '!help' or content == '/help':
         embed = nextcord.Embed(

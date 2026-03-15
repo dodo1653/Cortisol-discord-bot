@@ -36,9 +36,18 @@ async def on_message(message):
         if pair:
             price = float(pair['priceUsd'])
             change = float(pair['priceChange']['h24'])
+            market_cap = pair.get('marketCap', 0)
             emoji = '📈' if change >= 0 else '📉'
             change_str = f"+{change:.2f}%" if change >= 0 else f"{change:.2f}%"
-            await message.channel.send(f"${price:.6f} {emoji} ({change_str} 24h)")
+            
+            if market_cap:
+                if market_cap >= 1_000_000:
+                    mc_str = f"${market_cap/1_000_000:.2f}M"
+                else:
+                    mc_str = f"${market_cap:,.0f}"
+                await message.channel.send(f"${price:.6f} {emoji} ({change_str} 24h)\n📊 MC: {mc_str}")
+            else:
+                await message.channel.send(f"${price:.6f} {emoji} ({change_str} 24h)")
         else:
             await message.channel.send("cant check right now, chill 🥒")
     

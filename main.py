@@ -146,27 +146,33 @@ async def on_message(message):
         
         elif clean_content == '!who' or clean_content == '/who':
             embed = nextcord.Embed(
-                title="$CORTISOL",
-                description="Lower your cortisol, raise the gains",
-                color=0x00d4ff
+                title="CORTISOL",
+                color=0x1a1a2e,
+                description="lower your cortisol. raise the gains."
             )
-            embed.add_field(name="Contract Address", value="`9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump`", inline=False)
-            embed.set_footer(text="Solana")
+            embed.add_field(name="contract", value="`9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump`", inline=False)
+            embed.add_field(name="chain", value="solana", inline=True)
+            embed.set_footer(text="built by @dazzox")
             await message.channel.send(embed=embed)
             return
         
         elif clean_content == '!help' or clean_content == '/help':
             embed = nextcord.Embed(
-                title="CORTISOL Commands",
-                color=0x00d4ff,
-                description="Lower your cortisol, raise the gains"
+                title="CORTISOL",
+                color=0x1a1a2e,
+                description="lower your cortisol. raise the gains."
             )
             embed.add_field(
-                name="Commands",
-                value="!price - Check price\n!chart - View chart\n!buy - Buy CORTISOL\n!website - Visit site\n!who - What is CORTISOL?",
+                name="commands",
+                value="`!price` - check price & mc\n`!chart` - view chart\n`!buy` - buy token\n`!website` - visit site\n`!who` - token info",
                 inline=False
             )
-            embed.set_footer(text="Made by @dazzox")
+            embed.add_field(
+                name="chat",
+                value="ping @CORTISOL bot to chat with me",
+                inline=False
+            )
+            embed.set_footer(text="built by @dazzox")
             await message.channel.send(embed=embed)
             return
     

@@ -162,7 +162,17 @@ async def on_message(message):
             embed = nextcord.Embed(
                 title="CORTISOL",
                 color=0x1a1a2e,
-                description="lower your cortisol. raise the gains."
+                description="its an idea. a cultural movement. birthed by gen z. taken the world by storm."
+            )
+            embed.add_field(
+                name="the meme",
+                value="cortisol is the stress hormone. high cortisol = stress = bad. lower it = gains = win. simple concept that hit different.",
+                inline=False
+            )
+            embed.add_field(
+                name="how viral",
+                value="one of the biggest meme trends of 2026. even got mentioned by the white house. tiktok went crazy with it.",
+                inline=False
             )
             embed.add_field(name="contract", value="`9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump`", inline=False)
             embed.add_field(name="chain", value="solana", inline=True)

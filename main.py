@@ -16,7 +16,7 @@ SYSTEM_PROMPT = """You are CORTISOL Bot - a chill AF AI for the CORTISOL meme to
 
 PERSONALITY:
 - always lowercase
-- minimal punctuation. USE ALMOST NO COMMAS. JUST SPACES AND PERIODS
+- minimal punctuation. NO COMMAS. JUST SPACES AND PERIODS
 - chill unbothered vibes
 - sometimes short 1 sentence. sometimes yap a bit more. varies
 - be funny and witty
@@ -29,16 +29,8 @@ MEMORY:
 RULES:
 - if asked about CORTISOL: CA 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump buy pump.fun website lowcortisol.site
 - commands: !price !chart !buy !website !who !help
-- DONT USE COMMAS. NO PROPER GRAMMAR.
-- USE EMOJIS. viral tiktok emojis like 💀 😂 🧊 🥒 ✌️ 🔥 💎 👀 etc are encouraged
-
-Examples of NO COMMAS with emojis:
-- "oh ur asking about cortisol 💀 lowkey crazy how stress kills gains fr fr"
-- "haha u want in. my cortisol so low i dont even blink at price ✌️ based. just type !buy bro"
-- "CA is 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump bro just copy 📋"
-- "buy. pump.fun. simple 🛒"
-
-Short or long depends on the vibe. Use emojis. No commas ever."""
+- NO COMMAS. NO PROPER GRAMMAR.
+- you can use a few emojis sometimes but keep it minimal"""
 
 conversation_history = {}
 
@@ -112,77 +104,84 @@ async def on_message(message):
     if message.author == client.user:
         return
     
-    # Check if bot is mentioned
-    if client.user not in message.mentions:
+    # Check if bot is mentioned OR message starts with command
+    is_mention = client.user in message.mentions
+    content = message.content.lower()
+    clean_content = content.replace(f'<@{client.user.id}>', '').replace(f'<@!{client.user.id}>', '').strip()
+    
+    # Handle commands even without mention
+    if clean_content.startswith('!') or clean_content.startswith('/'):
+        if clean_content == '!price' or clean_content == '/price':
+            pair = get_token_data()
+            if pair:
+                price = float(pair['priceUsd'])
+                change = float(pair['priceChange']['h24'])
+                market_cap = pair.get('marketCap', 0)
+                emoji = '📈' if change >= 0 else '📉'
+                change_str = f"+{change:.2f}%" if change >= 0 else f"{change:.2f}%"
+                
+                if market_cap:
+                    if market_cap >= 1_000_000:
+                        mc_str = f"${market_cap/1_000_000:.2f}M"
+                    else:
+                        mc_str = f"${market_cap:,.0f}"
+                    await message.channel.send(f"${price:.6f} {emoji} ({change_str} 24h)\n📊 MC: {mc_str}")
+                else:
+                    await message.channel.send(f"${price:.6f} {emoji} ({change_str} 24h)")
+            else:
+                await message.channel.send("cant check right now, chill")
+            return
+        
+        elif clean_content == '!chart' or clean_content == '/chart':
+            await message.channel.send("📊 https://dexscreener.com/solana/4eurzqxzln24uvy89sgpes6mpdjcpz5walrdsttcmtsf")
+            return
+        
+        elif clean_content == '!buy' or clean_content == '/buy':
+            await message.channel.send("🛒 https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump")
+            return
+        
+        elif clean_content == '!website' or clean_content == '/website':
+            await message.channel.send("🌐 lowcortisol.site")
+            return
+        
+        elif clean_content == '!who' or clean_content == '/who':
+            embed = nextcord.Embed(
+                title="$CORTISOL",
+                description="Lower your cortisol, raise the gains",
+                color=0x00d4ff
+            )
+            embed.add_field(name="Contract Address", value="`9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump`", inline=False)
+            embed.set_footer(text="Solana")
+            await message.channel.send(embed=embed)
+            return
+        
+        elif clean_content == '!help' or clean_content == '/help':
+            embed = nextcord.Embed(
+                title="CORTISOL Commands",
+                color=0x00d4ff,
+                description="Lower your cortisol, raise the gains"
+            )
+            embed.add_field(
+                name="Commands",
+                value="!price - Check price\n!chart - View chart\n!buy - Buy CORTISOL\n!website - Visit site\n!who - What is CORTISOL?",
+                inline=False
+            )
+            embed.set_footer(text="Made by @dazzox")
+            await message.channel.send(embed=embed)
+            return
+    
+    # If not a command and not mentioned, ignore
+    if not is_mention:
         return
     
-    content = message.content.lower()
-    content = content.replace(f'<@{client.user.id}>', '').replace(f'<@!{client.user.id}>', '').strip()
-    
-    if not content:
+    if not clean_content:
         response = "hey chill one"
         await message.channel.send(response)
         return
     
-    if content.startswith('!'):
-        pass
-    else:
-        response = get_ai_response(content, message.author.id)
-        await message.channel.send(response)
-        return
-    
-    if content == '!price' or content == '/price':
-        pair = get_token_data()
-        if pair:
-            price = float(pair['priceUsd'])
-            change = float(pair['priceChange']['h24'])
-            market_cap = pair.get('marketCap', 0)
-            emoji = '📈' if change >= 0 else '📉'
-            change_str = f"+{change:.2f}%" if change >= 0 else f"{change:.2f}%"
-            
-            if market_cap:
-                if market_cap >= 1_000_000:
-                    mc_str = f"${market_cap/1_000_000:.2f}M"
-                else:
-                    mc_str = f"${market_cap:,.0f}"
-                await message.channel.send(f"${price:.6f} {emoji} ({change_str} 24h)\n📊 MC: {mc_str}")
-            else:
-                await message.channel.send(f"${price:.6f} {emoji} ({change_str} 24h)")
-        else:
-            await message.channel.send("cant check right now, chill 🥒")
-    
-    elif content == '!chart' or content == '/chart':
-        await message.channel.send("📊 https://dexscreener.com/solana/4eurzqxzln24uvy89sgpes6mpdjcpz5walrdsttcmtsf")
-    
-    elif content == '!buy' or content == '/buy':
-        await message.channel.send("🛒 https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump")
-    
-    elif content == '!website' or content == '/website':
-        await message.channel.send("🌐 lowcortisol.site")
-    
-    elif content == '!who' or content == '/who':
-        embed = nextcord.Embed(
-            title="$CORTISOL",
-            description="Lower your cortisol, raise the gains 🧊",
-            color=0x00d4ff
-        )
-        embed.add_field(name="Contract Address", value="`9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump`", inline=False)
-        embed.set_footer(text="Solana")
-        await message.channel.send(embed=embed)
-    
-    elif content == '!help' or content == '/help':
-        embed = nextcord.Embed(
-            title="🧊 $CORTISOL Commands",
-            color=0x00d4ff,
-            description="Lower your cortisol, raise the gains 🧊"
-        )
-        embed.add_field(
-            name="Commands",
-            value="• `!price` — Check token price\n• `!chart` — View DexScreener chart\n• `!buy` — Buy $CORTISOL\n• `!website` — Visit lowcortisol.site\n• `!who` — What is $CORTISOL?",
-            inline=False
-        )
-        embed.set_footer(text="Made by @dazzox")
-        await message.channel.send(embed=embed)
+    # Chat with AI
+    response = get_ai_response(clean_content, message.author.id)
+    await message.channel.send(response)
 
 token = os.environ.get('DISCORD_TOKEN') or os.environ.get('BOT_TOKEN')
 client.run(token)

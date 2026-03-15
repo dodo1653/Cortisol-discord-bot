@@ -55,7 +55,18 @@ async def on_message(message):
         await message.channel.send("$CORTISOL - lower your cortisol, raise the gains 🧊")
     
     elif content == '!help' or content == '/help':
-        await message.channel.send("🧊 **$CORTISOL Commands**\n\n!price - check price\n!chart - view chart\n!buy - buy\n!website - visit site\n!who - what is this")
+        embed = nextcord.Embed(
+            title="🧊 $CORTISOL Commands",
+            color=0x00d4ff,
+            description="Lower your cortisol, raise the gains 🧊"
+        )
+        embed.add_field(name="!price", value="Check token price", inline=True)
+        embed.add_field(name="!chart", value="View DexScreener chart", inline=True)
+        embed.add_field(name="!buy", value="Buy $CORTISOL", inline=True)
+        embed.add_field(name="!website", value="Visit lowcortisol.site", inline=True)
+        embed.add_field(name="!who", value="What is $CORTISOL?", inline=True)
+        embed.set_footer(text="$CORTISOL - chill vibes only 🥒")
+        await message.channel.send(embed=embed)
 
 token = os.environ.get('DISCORD_TOKEN') or os.environ.get('BOT_TOKEN')
 client.run(token)

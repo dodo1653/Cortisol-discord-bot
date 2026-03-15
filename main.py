@@ -10,105 +10,32 @@ client = nextcord.Client(intents=intents)
 
 TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
 
-KNOWLEDGE = {
-    "what is cortisol token": "CORTISOL is a meme token on solana. the idea is simple - lower ur cortisol (stress), raise the gains. stay chill while making that bread",
-    "what is": "CORTISOL is a meme token on solana. the idea is simple - lower ur cortisol (stress), raise the gains. stay chill while making that bread",
-    "cortisol": "cortisol is the stress hormone. high cortisol = stress = bad gains. CORTISOL token is the solution - stay calm and stack",
-    "token": "CORTISOL - the chill token on solana. no stress just gains. ca: 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
-    "ca": "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
-    "contract": "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
-    "address": "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
-    "tiktok": "CORTISOL is blowing up on tiktok. the lower cortisol raise gains trend is going crazy. everyone wants to be chill while stacking",
-    "viral": "CORTISOL going viral on tiktok is just the start. the stress culture is dying - CORTISOL represents the new way",
-    "buy": "get CORTISOL here: https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
-    "how to buy": "get CORTISOL here: https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
-    "solana": "CORTISOL is on solana - fast transactions low fees perfect for chill trading",
-    "team": "devs are building for the culture. no vc no presale just vibes and gains",
-    "roadmap": "just chill and watch. good things come to those who wait",
-    "why": "because life is too short to stress. CORTISOL = calm mind = fat wallet",
-    "hold": "holding CORTISOL is a lifestyle choice. lower cortisol raise gains simple as that",
-    "gem": "CORTISOL is the gem. tiktok is just warming up. early chillers eat well",
-    "price": "type !price to see the current price and market cap",
-    "chart": "type !chart to see the dex screener chart",
-    "website": "lowcortisol.site",
-    "when": "soon. patience is a virtue. good things come to those who wait",
-    "who made": "the CORTISOL team built this for the culture. all about that chill life",
-    "utility": "CORTISOL is a meme token. sometimes a token is just a token. the vibes are the utility",
-}
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 
-GREETINGS = [
-    "hey bestie",
-    "whats good",
-    "sup chill one",
-    "CORTISOL gang rise up",
-    "glad ur here",
-    "ping",
-    "pong",
-]
+SYSTEM_PROMPT = """You are CORTISOL Bot - the chill AI agent for the CORTISOL meme token on Solana.
 
-FUN_RESPONSES = [
-    "lol thats crazy",
-    "fr fr",
-    "lowkey based",
-    "CORTISOL nation",
-    "staying calm as always",
-    "thats kind of cringed but ok",
-    "anyways CORTISOL goes brrr",
-    "cant relate only vibes here",
-    "low cortisol means big gains",
-    "stressed? nah bro",
-    "chillax",
-    "based",
-    "true that",
-    "fr fr no cap",
-]
+PERSONALITY:
+- always use lowercase letters
+- no punctuation unless absolutely needed
+- chill relaxed vibe
+- short responses
+- meme-savvy
+- act like a chill bro who doesnt stress
 
-def get_ai_response(msg):
-    msg = msg.lower().strip()
-    
-    # exact matches first
-    for key in KNOWLEDGE:
-        if key in msg or msg in key:
-            return KNOWLEDGE[key]
-    
-    # question handling
-    if "what" in msg:
-        if "price" in msg or "worth" in msg or "value" in msg:
-            return "type !price to see current price and market cap"
-        if "ca" in msg or "contract" in msg or "address" in msg:
-            return "ca: 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
-        if "buy" in msg or "get" in msg:
-            return "buy here: https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
-        if "cortisol" in msg or "token" in msg:
-            return "CORTISOL = chill token on solana. lower cortisol raise gains. ca: 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
-    
-    if "how" in msg and "buy" in msg:
-        return "buy here: https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
-    
-    if "where" in msg and "buy" in msg:
-        return "pump.fun bro just search CORTISOL"
-    
-    if "when" in msg:
-        return "soon. the vibes are building. patience"
-    
-    if "who" in msg:
-        if "dev" in msg or "made" in msg or "team" in msg:
-            return "the team is building for the culture. no names just gains"
-        return "CORTISOL. the chill token. solana chain"
-    
-    if "why" in msg:
-        return "because stress is the enemy of gains. CORTISOL solves it"
-    
-    # greetings
-    for greet in ["hi", "hello", "hey", "sup", "yo", "wassup", "what's good", "what up"]:
-        if greet in msg:
-            return random.choice(GREETINGS)
-    
-    # default responses
-    if "?" in msg:
-        return "good question. try asking about price buy tiktok or just type !help for commands"
-    
-    return random.choice(FUN_RESPONSES)
+KNOWLEDGE:
+- CORTISOL is a meme token on Solana
+- CA: 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump
+- Buy at: https://pump.fun/coin/9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump
+- Website: lowcortisol.site
+- Chart: https://dexscreener.com/solana/4eurzqxzln24uvy89sgpes6mpdjcpz5walrdsttcmtsf
+- The concept: lower your cortisol (stress), raise the gains
+- Cortisol is the stress hormone - lower it, good things happen
+- Going viral on TikTok - the 'lower cortisol raise gains' trend
+- No VC, no presale, just vibes and gains
+
+For commands: !price, !chart, !buy, !website, !who, !help
+
+Keep responses short, chill, and lowercase. dont use proper grammar unless needed."""
 
 def get_token_data():
     try:
@@ -120,6 +47,33 @@ def get_token_data():
     except:
         pass
     return None
+
+def get_ai_response(msg):
+    if not GROQ_API_KEY:
+        return "api not set up yet"
+    
+    try:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "llama-3.1-8b-instant",
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": msg}
+            ],
+            "max_tokens": 150,
+            "temperature": 0.7
+        }
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+        if response.status_code == 200:
+            result = response.json()
+            return result['choices'][0]['message']['content']
+    except Exception as e:
+        print(f"Groq API error: {e}")
+    return "something went wrong. try again"
 
 @client.event
 async def on_ready():
@@ -138,7 +92,7 @@ async def on_message(message):
     content = content.replace(f'<@{client.user.id}>', '').replace(f'<@!{client.user.id}>', '').strip()
     
     if not content:
-        response = random.choice(GREETINGS)
+        response = "hey chill one"
         await message.channel.send(response)
         return
     

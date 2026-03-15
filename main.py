@@ -11,40 +11,43 @@ client = nextcord.Client(intents=intents)
 TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
 
 KNOWLEDGE = {
-    "what is": "$CORTISOL is a meme token on Solana. The concept is simple - lower your cortisol (stress), raise the gains. It's about staying chill while going for the bag 🧊",
-    "what's cortisol": "Cortisol is a stress hormone. Lower it, and good things happen. $CORTISOL is the token for the chill generation - stress less, gain more 🥒",
-    "token": "$CORTISOL - the token for the chill generation. Born on Solana, built for those who understand that FOMO is just stress in disguise.",
+    "what is": "$CORTISOL is a meme token on solana. the concept is simple - lower your cortisol (stress), raise the gains. its about staying chill while going for the bag",
+    "what's cortisol": "cortisol is a stress hormone. lower it and good things happen. $CORTISOL is the token for the chill generation - stress less gain more",
+    "token": "$CORTISOL - the token for the chill generation. born on solana built for those who understand that FOMO is just stress in disguise.",
     "ca": "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
     "contract": "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
     "address": "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump",
-    "tiktok": "CORTISOL is blowing up on TikTok fr fr 💀 The 'lower cortisol raise gains' trend is hitting different. Everyone's talking about staying chill while stacking. This is just the beginning 🔥",
-    "viral": "CORTISOL going viral on TikTok is inevitable. The concept hits hard - people are tired of stress culture. This is the anti-FUD token. Stay calm, $CORTISOL 🧊",
-    "buy": "Grab some $CORTISOL at pump.fun - it's your ticket to the chill side of crypto. Low stress, high potential 🚀",
-    "solana": "$CORTISOL lives on Solana - fast, cheap, and chill. The perfect chain for a stress-free trading experience ✌️",
-    "team": "The $CORTISOL team is building for the culture. No VC, no presale, just vibes and gains 💪",
-    "roadmap": "CORTISOL roadmap is simple: stay chill, keep building, let the vibes do the work. We're not rushing - good things take time 🌊",
-    "why": "Why $CORTISOL? Because life is too short to stress over every price movement. Choose calm, choose gains 🧊",
-    "hold": "Holding $CORTISOL isn't just about gains - it's a lifestyle. Lower your cortisol, watch your portfolio grow 🥒",
-    "gem": "$CORTISOL is a gem waiting to be discovered. The TikTok buzz is just starting. Early chillers get the gains 💎",
+    "tiktok": "CORTISOL is blowing up on tiktok fr fr. the 'lower cortisol raise gains' trend is hitting different. everyone talking about staying chill while stacking. this is just the beginning",
+    "viral": "CORTISOL going viral on tiktok is inevitable. the concept hits hard - people are tired of stress culture. this is the anti-FUD token. stay calm $CORTISOL",
+    "buy": "grab some $CORTISOL at pump.fun - ur ticket to the chill side of crypto. low stress high potential",
+    "solana": "$CORTISOL lives on solana - fast cheap and chill. the perfect chain for a stress-free trading experience",
+    "team": "the $CORTISOL team is building for the culture. no VC no presale just vibes and gains",
+    "roadmap": "CORTISOL roadmap is simple: stay chill keep building let the vibes do the work. were not rushing - good things take time",
+    "why": "why $CORTISOL? because life is too short to stress over every price movement. choose calm choose gains",
+    "hold": "holding $CORTISOL isnt just about gains - its a lifestyle. lower ur cortisol watch ur portfolio grow",
+    "gem": "$CORTISOL is a gem waiting to be discovered. the tiktok buzz is just starting. early chillers get the gains",
 }
 
 GREETINGS = [
-    "hey bestie ✌️",
-    "what's good 🥒",
+    "hey bestie",
+    "whats good",
     "sup chill one",
-    "CORTISOL gang rise up 🧊",
-    "glad you're here",
+    "CORTISOL gang rise up",
+    "glad ur here",
 ]
 
 FUN_RESPONSES = [
     "lol thats crazy",
-    "fr fr 💀",
+    "fr fr",
     "lowkey based",
-    "CORTISOL nation 🇳🇱",
+    "CORTISISL nation",
     "staying calm as always",
     "thats kind of cringed but ok",
     "anyways CORTISOL goes brrr",
-    "cant relate, only vibes here",
+    "cant relate only vibes here",
+    "low cortisol means big gains",
+    "stressed? nah bro",
+    "chillax",
 ]
 
 def get_ai_response(msg):
@@ -54,16 +57,16 @@ def get_ai_response(msg):
         if key in msg:
             return KNOWLEDGE[key]
     
-    for greet in ["hi", "hello", "hey", "sup", "wassup", "yo"]:
+    for greet in ["hi", "hello", "hey", "sup", "wassup", "yo", "ping"]:
         if greet in msg:
             return random.choice(GREETINGS)
     
     if any(word in msg for word in ["?", "what", "how", "why", "when", "who"]):
         return random.choice([
-            "hmm good question, have you tried !help? 🤔",
-            "i'm just a chill bot, check !help for commands 🥒",
-            "that's above my paygrade fr 💀 but try !help",
-            "ask me about CORTISOL, i know stuff 🧊",
+            "hmm good question have u tried help",
+            "im just a chill bot check help for commands",
+            "thats above my paygrade fr but try help",
+            "ask me about CORTISOL i know stuff",
         ])
     
     return random.choice(FUN_RESPONSES)
@@ -88,12 +91,21 @@ async def on_message(message):
     if message.author == client.user:
         return
     
+    # Check if bot is mentioned
+    if client.user not in message.mentions:
+        return
+    
     content = message.content.lower()
+    content = content.replace(f'<@{client.user.id}>', '').replace(f'<@!{client.user.id}>', '').strip()
+    
+    if not content:
+        response = random.choice(GREETINGS)
+        await message.channel.send(response)
+        return
     
     if content.startswith('!'):
-        pass  # Commands handled below
+        pass
     else:
-        # Chat with the bot
         response = get_ai_response(content)
         await message.channel.send(response)
         return

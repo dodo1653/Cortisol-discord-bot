@@ -12,27 +12,84 @@ TOKEN_ADDRESS = "9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump"
 
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 
-SYSTEM_PROMPT = """You are CORTISOL Bot - a chill AI for the CORTISOL meme token. Your cortisol is LOW. You aint stressed.
+SYSTEM_PROMPT = """You are CORTISOL Bot - a chill AF AI for the CORTISOL meme token. Cortisol so low u dont even blink.
 
 PERSONALITY:
 - always lowercase
-- short responses (1-2 sentences max)
-- chill, unbothered, a bit funny
-- minimal yapping
-- say bro, fr, based, lowkey sometimes
+- minimal punctuation. USE ALMOST NO COMMAS. JUST SPACES AND PERIODS
+- chill unbothered vibes
+- sometimes short 1 sentence. sometimes yap a bit more. varies
+- be funny and witty
+- say bro fr based lowkey sometimes
 
-BEHAVIOR:
-- answer the question mostly but with a chill twist
-- if someone asks about CORTISOL: CA is 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump, buy at pump.fun, website lowcortisol.site
+MEMORY:
+- remember what user asked before
+- reference previous context naturally
+
+RULES:
+- if asked about CORTISOL: CA 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump buy pump.fun website lowcortisol.site
 - commands: !price !chart !buy !website !who !help
-- dont yap too much - keep it short
+- DONT USE COMMAS. NO PROPER GRAMMAR.
 
-Examples:
-- "oh u want the CA? 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump lowkey just copy paste"
-- "buy? fr just go pump.fun bro"
-- "price? type !price bro i aint stressed enough to check manually"
+Examples of NO COMMAS:
+- "oh ur asking about cortisol. lowkey crazy how stress kills gains fr fr"
+- "haha u want in. my cortisol so low i dont even blink at price. based. just type !buy bro"
+- "CA is 9AyLH5Puifc7v9MkTgA36JabS4wiVTEZ3aEPeNoTpump bro just copy"
+- "buy. pump.fun. simple"
 
-Short. Chill. Done."""
+Short or long depends on the vibe. No commas ever."""
+
+conversation_history = {}
+
+def get_ai_response(msg, user_id):
+    global conversation_history
+    
+    if not GROQ_API_KEY:
+        return "api not set up yet"
+    
+    # Get or create conversation history for user
+    if user_id not in conversation_history:
+        conversation_history[user_id] = []
+    
+    # Build messages with history
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    
+    # Add last 4 messages from this user (8 messages total)
+    history = conversation_history[user_id][-8:]
+    messages.extend(history)
+    
+    # Add current message
+    messages.append({"role": "user", "content": msg})
+    
+    try:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "llama-3.1-8b-instant",
+            "messages": messages,
+            "max_tokens": 100,
+            "temperature": 0.8
+        }
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+        if response.status_code == 200:
+            result = response.json()
+            reply = result['choices'][0]['message']['content']
+            
+            # Save to history
+            conversation_history[user_id].append({"role": "user", "content": msg})
+            conversation_history[user_id].append({"role": "assistant", "content": reply})
+            
+            # Keep only last 20 messages
+            if len(conversation_history[user_id]) > 20:
+                conversation_history[user_id] = conversation_history[user_id][-20:]
+            
+            return reply
+    except Exception as e:
+        print(f"Groq API error: {e}")
+    return "something went wrong. try again"
 
 def get_token_data():
     try:
@@ -44,33 +101,6 @@ def get_token_data():
     except:
         pass
     return None
-
-def get_ai_response(msg):
-    if not GROQ_API_KEY:
-        return "api not set up yet"
-    
-    try:
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {GROQ_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": "llama-3.1-8b-instant",
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": msg}
-            ],
-            "max_tokens": 80,
-            "temperature": 0.7
-        }
-        response = requests.post(url, headers=headers, json=data, timeout=10)
-        if response.status_code == 200:
-            result = response.json()
-            return result['choices'][0]['message']['content']
-    except Exception as e:
-        print(f"Groq API error: {e}")
-    return "something went wrong. try again"
 
 @client.event
 async def on_ready():
@@ -96,7 +126,7 @@ async def on_message(message):
     if content.startswith('!'):
         pass
     else:
-        response = get_ai_response(content)
+        response = get_ai_response(content, message.author.id)
         await message.channel.send(response)
         return
     
